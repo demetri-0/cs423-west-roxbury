@@ -4,6 +4,7 @@ Replicating Chapter 2 slides 15-43
 """
 
 import pandas as pd
+import numpy as np
 import mlba
 
 
@@ -59,3 +60,60 @@ stratified_sample = (
 print("\nStratified sample by REMODEL:")
 print(stratified_sample.head())
 print("Stratified sample shape:", stratified_sample.shape)
+
+
+# Section 3: Reviewing variables
+print("\nSelected variable data types:")
+print(housing_df.dtypes[["TOTAL_VALUE", "FLOORS", "REMODEL"]])
+
+print("\nVariable list:")
+print(housing_df.columns)
+
+
+# Section 4: Prepare categorical variables
+# Missing REMODEL values are treated as their own category.
+housing_with_remodel_category = (
+    housing_df
+    .assign(REMODEL=lambda df: df["REMODEL"].fillna("None").astype("category"))
+)
+
+print("\nREMODEL categories:")
+print(housing_with_remodel_category["REMODEL"].cat.categories)
+
+print("\nREMODEL data type:")
+print(housing_with_remodel_category["REMODEL"].dtype)
+
+housing_dummies_df = pd.get_dummies(
+    housing_with_remodel_category,
+    prefix_sep="_",
+    dummy_na=True,
+    dtype=int,
+)
+
+print("\nREMODEL dummy variables:")
+print(housing_dummies_df.loc[:, "REMODEL_None":"REMODEL_Recent"].head())
+
+
+# Section 5: Replacing missing data with the median
+# This demonstrates dropping missing rows versus imputing with a typical value.
+missing_bedrooms_df = housing_dummies_df.copy()
+
+missing_rows = missing_bedrooms_df.sample(10, random_state=1).index
+missing_bedrooms_df.loc[missing_rows, "BEDROOMS"] = np.nan
+
+print("\nValid BEDROOMS values after setting 10 rows to missing:")
+print(missing_bedrooms_df["BEDROOMS"].count())
+
+reduced_df = missing_bedrooms_df.dropna()
+
+print("\nRows after removing rows with missing values:")
+print(len(reduced_df))
+
+median_bedrooms = missing_bedrooms_df["BEDROOMS"].median()
+
+missing_bedrooms_df = missing_bedrooms_df.assign(
+    BEDROOMS=lambda df: df["BEDROOMS"].fillna(median_bedrooms)
+)
+
+print("\nValid BEDROOMS values after filling missing values with median:")
+print(missing_bedrooms_df["BEDROOMS"].count())
