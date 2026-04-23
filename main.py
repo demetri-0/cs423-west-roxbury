@@ -6,6 +6,8 @@ Replicating Chapter 2 slides 15-43
 import pandas as pd
 import numpy as np
 import mlba
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler, MinMaxScaler
 
 
 # Section 1: Load and inspect the data
@@ -117,3 +119,83 @@ missing_bedrooms_df = missing_bedrooms_df.assign(
 
 print("\nValid BEDROOMS values after filling missing values with median:")
 print(missing_bedrooms_df["BEDROOMS"].count())
+
+
+# Section 6: Normalizing and rescaling
+# Standardization centers values around 0; rescaling puts values between 0 and 1.
+standardized_pandas_df = (
+    missing_bedrooms_df - missing_bedrooms_df.mean()
+) / missing_bedrooms_df.std()
+
+print("\nStandardized data using pandas:")
+print(standardized_pandas_df.head())
+
+standard_scaler = StandardScaler()
+
+standardized_sklearn_df = pd.DataFrame(
+    standard_scaler.fit_transform(missing_bedrooms_df),
+    index=missing_bedrooms_df.index,
+    columns=missing_bedrooms_df.columns,
+)
+
+print("\nStandardized data using scikit-learn:")
+print(standardized_sklearn_df.head())
+
+rescaled_pandas_df = (
+    missing_bedrooms_df - missing_bedrooms_df.min()
+) / (missing_bedrooms_df.max() - missing_bedrooms_df.min())
+
+print("\nRescaled data using pandas:")
+print(rescaled_pandas_df.head())
+
+min_max_scaler = MinMaxScaler()
+
+rescaled_sklearn_df = pd.DataFrame(
+    min_max_scaler.fit_transform(missing_bedrooms_df),
+    index=missing_bedrooms_df.index,
+    columns=missing_bedrooms_df.columns,
+)
+
+print("\nRescaled data using scikit-learn:")
+print(rescaled_sklearn_df.head())
+
+
+# Section 7: Partitioning data
+# The holdout set is kept separate so model performance can be tested fairly.
+train_data, holdout_data = train_test_split(
+    missing_bedrooms_df,
+    test_size=0.40,
+    random_state=1,
+)
+
+print("\nTraining data shape:")
+print(train_data.shape)
+
+print("\nHoldout data shape:")
+print(holdout_data.shape)
+
+
+# Section 8: Clean and preprocess for modeling
+# Reloading keeps the modeling dataset separate from earlier demonstrations.
+modeling_df = (
+    mlba.load_data("WestRoxbury.csv")
+    .rename(columns=lambda col: col.strip().replace(" ", "_"))
+    .assign(REMODEL=lambda df: df["REMODEL"].fillna("None").astype("category"))
+    .pipe(pd.get_dummies, prefix_sep="_", drop_first=True, dtype=int)
+)
+
+exclude_columns = ("TOTAL_VALUE", "TAX")
+predictors = [
+    column for column in modeling_df.columns
+    if column not in exclude_columns
+]
+outcome = "TOTAL_VALUE"
+
+print("\nModeling dataframe columns:")
+print(modeling_df.columns)
+
+print("\nPredictors:")
+print(predictors)
+
+print("\nOutcome:")
+print(outcome)
