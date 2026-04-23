@@ -8,6 +8,8 @@ import numpy as np
 import mlba
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
+from sklearn.linear_model import LinearRegression
+from mlba import regressionSummary
 
 
 # Section 1: Load and inspect the data
@@ -199,3 +201,45 @@ print(predictors)
 
 print("\nOutcome:")
 print(outcome)
+
+
+# Section 9: Partition predictors and outcome for modeling
+X = modeling_df[predictors]
+y = modeling_df[outcome]
+
+train_X, holdout_X, train_y, holdout_y = train_test_split(
+    X,
+    y,
+    test_size=0.40,
+    random_state=1,
+)
+
+print("\nTraining predictors shape:")
+print(train_X.shape)
+
+print("\nHoldout predictors shape:")
+print(holdout_X.shape)
+
+
+# Section 10: Fit model and score holdout data
+model = LinearRegression()
+model.fit(train_X, train_y)
+
+holdout_pred = model.predict(holdout_X)
+
+holdout_results = pd.DataFrame({
+    "TOTAL_VALUE": holdout_y,
+    "predicted": holdout_pred,
+    "residual": holdout_y - holdout_pred,
+})
+
+print("\nHoldout results:")
+print(holdout_results.head())
+
+
+# Section 11: Assess accuracy
+print("\nRegression summary for holdout set:")
+regressionSummary(
+    y_true=holdout_results["TOTAL_VALUE"],
+    y_pred=holdout_results["predicted"],
+)
