@@ -37,16 +37,11 @@ housing_df.groupby('REMODEL', dropna=False).sample(frac=0.8)
 
 """ Reviewing Variables """
 
-# random sample of 5 houses
-housing_df.sample(5)
+# print the data type
+housing_df.dtypes[['TOTAL_VALUE', 'FLOORS', 'REMODEL']] 
 
-# oversample houses with over 10 rooms
-weights = [0.9 if rooms > 10 else 0.01 for rooms in 
-     housing_df.ROOMS]
-housing_df.sample(5, weights=weights)
-
-# stratified sampling of houses by remodeling state
-housing_df.groupby('REMODEL', dropna=False).sample(frac=0.8)
+# print a list of variables
+housing_df.columns 
 
 """ Data Prep """
 
